@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="Advance" content="AMER">
+  <meta name="keywords" content="AMER">
+  <meta name="author" content="AMER">
+  <meta property="og.image" content="logo.png"/>
+  <meta property="og.type" content="website"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="logo.png" type="image/png">
+  <title>إدارة الشهادات</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="messageBox" class="message-box"></div>
+
+<header>
+  <div class="header-right">
+    <img src="A.png" alt="logo2">
+    <img src="logo.png" alt="logo">
+  </div>
+  <div class="header-left">
+    <button id="logoutBtn" class="logout-btn">تسجيل خروج</button>
+    <input type="text" id="searchInput" placeholder="🔎 ابحث بإسم العلامة">
+  </div>
+</header>
+
+<section class="form-section">
+  <div class="form-grid">
+    <input type="text" id="brandName" placeholder="اسم العلامة">
+    <input type="text" id="brandNumber" placeholder="رقم العلامة">
+    <input type="text" id="companyName" placeholder="اسم الشركة">
+
+    <label>تاريخ الإنتاج</label>
+    <input type="date" id="productionDate">
+    <label>تاريخ الانتهاء</label>
+    <input type="date" id="expiryDate">
+
+    <select id="certificateStatus">
+      <option value="قيد الإجراء">قيد الإجراء</option>
+      <option value="سارية">سارية</option>
+      <option value="منتهية">منتهية</option>
+    </select>
+
+    <input type="text" id="fileNumber" placeholder="رقم الملف">
+    <input type="text" id="companyNumber" placeholder="رقم الدرج">
+
+    <center>
+      <!-- رفع صورة -->
+      <label class="btn-upload" for="certificateImage">إرفع صورة</label>
+      <input type="file" id="certificateImage" accept="image/*">
+      <img id="imagePreview" class="image-preview">
+
+      <!-- رفع PDF / Excel -->
+      <label class="btn-upload" for="certificateFile">إرفع PDF / Excel</label>
+      <input type="file" id="certificateFile" accept=".pdf,.xls,.xlsx">
+      <div id="fileNameDisplay" class="file-name"></div>
+    </center>
+
+    <!-- الملاحظات (الإضافة الوحيدة) -->
+    <input type="text" id="notes" placeholder="ملاحظات (اختياري)">
+
+    <button id="submitBtn">إضافة</button>
+  </div>
+
+  <button id="deleteAllBtn" class="btn-delete-all">حذف الكل</button>
+</section>
+
+<section class="certificates" id="certificatesContainer"></section>
+
+<div class="modal" id="detailsModal" style="display:none;">
+  <div class="modal-content">
+    <div id="detailsContent" dir="rtl"></div>
+    <button class="btn-view-file" id="viewFileBtn" style="display:none;">مشاهدة الملف</button>
+    <button class="btn-delete" id="deleteBtn">حذف</button>
+    <button class="btn-edit" id="editBtn">تعديل</button>
+    <button class="btn-close" id="closeBtn">إغلاق</button>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
