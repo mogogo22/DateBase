@@ -171,3 +171,32 @@ input[type="file"]{display:none;}
   border-radius:6px;
   font-weight:bold;
 }
+.backup-controls {
+  margin: 10px 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+#exportBtn, #importBtn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  transition: 0.3s;
+}
+
+#exportBtn {
+  background-color: #28a745; /* لون أخضر */
+  color: white;
+}
+
+#importBtn {
+  background-color: #007bff; /* لون أزرق */
+  color: white;
+}
+
+#exportBtn:hover, #importBtn:hover {
+  opacity: 0.8;
+}

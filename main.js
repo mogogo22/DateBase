@@ -511,3 +511,58 @@ logoutBtn.onclick = () => {
 ======================= */
 renderCertificates();
 checkAllExpiryAlerts();
+
+/* =======================
+   BACKUP & RESTORE (Export/Import)
+======================= */
+
+// 1. دالة التصدير: لتحميل البيانات كملف JSON
+function exportData() {
+  const data = localStorage.getItem("certificates");
+  if (!data || data === "[]") {
+      showMessage("لا توجد بيانات لتصديرها!", false);
+      return;
+  }
+  
+  // إنشاء ملف وهمي للتحميل
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  
+  // تسمية الملف بتاريخ اليوم لسهولة التنظيم
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `backup_certificates_${date}.json`;
+  a.click();
+  
+  showMessage("تم تصدير النسخة الاحتياطية بنجاح");
+}
+
+// 2. دالة الاستيراد: لرفع الملف وقراءته
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+      try {
+          const content = e.target.result;
+          // التأكد أن الملف يحتوي على بيانات صحيحة قبل الحفظ
+          const parsed = JSON.parse(content);
+          
+          if (Array.isArray(parsed)) {
+              if (confirm("هل أنت متأكد؟ سيتم استبدال البيانات الحالية بالبيانات المستوردة.")) {
+                  localStorage.setItem("certificates", content);
+                  showMessage("تم استيراد البيانات بنجاح!");
+                  // إعادة تحميل الصفحة لتظهر البيانات الجديدة
+                  setTimeout(() => location.reload(), 1500);
+              }
+          } else {
+              alert("الملف غير صحيح!");
+          }
+      } catch (err) {
+          alert("حدث خطأ أثناء قراءة الملف!");
+      }
+  };
+  reader.readAsText(file);
+}

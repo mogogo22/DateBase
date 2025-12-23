@@ -67,6 +67,11 @@
   </div>
 
   <button id="deleteAllBtn" class="btn-delete-all">حذف الكل</button>
+  <div class="backup-controls">
+    <button id="exportBtn" onclick="exportData()">تصدير نسخة احتياطية (Export)</button>
+    <button id="importBtn" onclick="document.getElementById('fileInputImport').click()">استيراد نسخة احتياطية (Import)</button>
+    <input type="file" id="fileInputImport" style="display:none" accept=".json" onchange="importData(event)">
+</div>
 </section>
 
 <section class="certificates" id="certificatesContainer"></section>
