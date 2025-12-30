@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="logo.png" type="image/png">
+<title>تسجيل الدخول</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<audio id="notifySound" src="das.mp3" preload="auto"></audio>
+
+<div class="login-container">
+  <h2>تسجيل الدخول</h2>
+  <div class="login-form">
+    <input type="text" id="email" autocomplete="new-password" placeholder="الإيميل" >
+    <input type="password" id="password" autocomplete="new-password" placeholder="كلمة المرور">
+    <button id="loginBtn">دخول</button>
+  </div>
+  <div id="loginMessage" class="message-box"></div>
+</div>
+
+<script>
+document.getElementById("loginBtn").onclick = function(){
+  const email = document.getElementById("email").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const msg = document.getElementById("loginMessage");
+
+  if(email === "amer" && pass === "amer@689090"){
+    window.location.href = "index.html";
+  } else {
+    msg.textContent = "الإيميل أو كلمة المرور خاطئة!";
+    try { notifySound.currentTime = 0; notifySound.play(); } catch(e){}
+    msg.style.opacity = "1";
+    setTimeout(()=>{ msg.style.opacity = "0"; },2000);
+  }
+}
+</script>
+</body>
+</html>

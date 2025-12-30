@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="logo.png" type="image/png">
+  <title>إدارة الشهادات</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div id="messageBox" class="message-box"></div>
+
+<header>
+  <div class="header-right">
+    <img src="A.png" alt="logo2">
+    <img src="logo.png" alt="logo">
+  </div>
+  <div class="header-left">
+    <button id="logoutBtn" class="logout-btn">تسجيل خروج</button>
+    <input type="text" id="searchInput" placeholder="🔎 ابحث بإسم العلامة">
+  </div>
+  <div class="mode-toggle">
+    <button id="themeToggle" title="تغيير وضع الإضاءة">
+        <span id="themeIcon">🌙</span>
+    </button>
+  </div>
+</header>
+
+<section class="form-section">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <label class="btn-upload" for="excelInput" style="background: linear-gradient(to top,  #8f00c7, #a8017f); width: 220px;">📂 سحب بيانات من ملف إكسيل</label>
+    <input type="file" id="excelInput" accept=".xlsx, .xls" onchange="importFromExcel(event)">
+    <p style="font-size: 11px; color: #666; margin-top: 5px;">* يجب أن يكون الملف بنفس ترتيب أعمدة النظام</p>
+  </div>
+
+  <div class="form-grid">
+    <input type="text" id="brandName" placeholder="اسم العلامة">
+    <input type="text" id="brandNumber" placeholder="رقم العلامة">
+    <input type="text" id="companyName" placeholder="اسم الشركة">
+    <input type="text" id="brandCategory" placeholder="الفئة"> <label>تاريخ الإنتاج</label>
+    <input type="date" id="productionDate">
+    <label>تاريخ الانتهاء</label>
+    <input type="date" id="expiryDate">
+    
+    <label>تاريخ الإشهار (اختياري)</label> <input type="date" id="noticeDate">
+    <label>تاريخ التسجيل</label> <input type="date" id="registrationDate">
+
+    <select id="certificateStatus">
+      <option value="قيد الإجراء">قيد الإجراء</option>
+      <option value="سارية">سارية</option>
+      <option value="منتهية">منتهية</option>
+    </select>
+
+    <input type="text" id="fileNumber" placeholder="رقم الملف">
+    <input type="text" id="companyNumber" placeholder="رقم الدرج">
+
+    <center>
+      <label class="btn-upload" for="certificateImage">إرفع صورة</label>
+      <input type="file" id="certificateImage" accept="image/*">
+      <img id="imagePreview" class="image-preview">
+
+      <label class="btn-upload" for="certificateFile">إرفع PDF / Excel</label>
+      <input type="file" id="certificateFile" accept=".pdf,.xls,.xlsx" multiple> 
+      <div id="fileNameDisplay" class="file-name"></div>
+    </center>
+
+    <input type="text" id="notes" placeholder="ملاحظات (اختياري)">
+
+    <button id="submitBtn">إضافة</button>
+  </div>
+
+  <button id="deleteAllBtn" class="btn-delete-all">حذف الكل</button>
+  <div class="backup-controls">
+    <button id="exportBtn" onclick="exportData()">تصدير نسخة احتياطية (Export)</button>
+    <button id="importBtn" onclick="document.getElementById('fileInputImport').click()">استيراد نسخة احتياطية (Import)</button>
+    <input type="file" id="fileInputImport" style="display:none" accept=".json" onchange="importData(event)">
+  </div>
+</section>
+
+<section class="certificates" id="certificatesContainer"></section>
+
+<div class="modal" id="detailsModal" style="display:none;">
+  <div class="modal-content">
+    <div id="detailsContent" dir="rtl"></div>
+    <button class="btn-delete" id="deleteBtn">حذف</button>
+    <button class="btn-edit" id="editBtn">تعديل</button>
+    <button class="btn-close" id="closeBtn">إغلاق</button>
+  </div>
+</div>
+
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="foot" id="foont">
+    <div class="container">
+      <p class="fop">Copyright © 2026 <span class="ssss">Muhamad ELmoatasem Bellh</span></p>
+    </div>
+  </footer>
+  
+<script src="main.js"></script>
+</body>
+</html>
