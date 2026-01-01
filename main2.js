@@ -307,14 +307,25 @@ function openDetails(cert, index) {
     <div style="text-align: right; line-height: 1.4; font-size: 14px;">
         <p><b>🔍 اسم العلامة:</b> ${cert.brandName}</p>
         <p><b>🔢 رقم العلامة:</b> ${cert.brandNumber}</p>
-        <p><b>🏢 اسم الشركة:</b> ${cert.companyName} | <b>🏷️ الفئة:</b> ${cert.brandCategory || "غير محددة"}</p> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <p><b>🏢 اسم الشركة:</b> ${cert.companyName} | <b>🏷️ الفئة:</b> ${cert.brandCategory || "غير محددة"}</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
              <p>📅 إنتاج: ${formatArabicDate(cert.productionDate)}</p>
              <p>📅 انتهاء: ${formatArabicDate(cert.expiryDate)}</p>
-             <p>📅 إشهار: ${cert.noticeDate ? formatArabicDate(cert.noticeDate) : "غير محدد"}</p> <p>📅 تسجيل: ${formatArabicDate(cert.registrationDate)}</p> </div>
+             <p>📅 إشهار: ${cert.noticeDate ? formatArabicDate(cert.noticeDate) : "غير محدد"}</p>
+             <p>📅 تسجيل: ${formatArabicDate(cert.registrationDate)}</p>
+        </div>
         <p><b>⏳ المتبقي:</b> <span style="color: #d35400;">${getRemainingTime(cert.expiryDate)}</span></p>
         <p><b>💡 الحالة:</b> <span class="${getStatusClass(cert.status)}">${cert.status}</span></p>
         <p><b>📁 رقم الملف:</b> ${cert.fileNumber} | <b>📥 رقم الدرج:</b> ${cert.companyNumber}</p>
         ${cert.notes ? `<p><b>📝 ملاحظات:</b> ${cert.notes}</p>` : ""}
+        
+        <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+            <button onclick='downloadCertExcel(${JSON.stringify(cert).replace(/'/g, "&apos;")})' 
+                    style="background: #2980b9; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                📥 Download Excel Card
+            </button>
+        </div>
+
         ${cert.image ? `
             <img src="${cert.image}" 
                  style="width:150px; border-radius:8px; margin-top:10px; cursor:zoom-in; transition: 0.3s;" 
@@ -499,3 +510,127 @@ themeToggle.onclick = () => {
 renderCertificates();
 checkAllExpiryAlerts();
 
+/* =======================
+    دالة تصدير الشهادة لإكسيل (بالتنسيق اللي العميل عاوزه)
+======================= */
+function downloadCertExcel(cert) {
+  // 1. العناوين (Headers) بنفس الترتيب اللي في صورة الإكسيل
+  const headers = [
+      "اسم العلامة", 
+      "رقم العلامة", 
+      "اسم الشركة", 
+      "الفئة", 
+      "تاريخ التقديم (الإنتاج)", 
+      "تاريخ نهاية التسجيل (الانتهاء)", 
+      "تاريخ الاشهار", 
+      "تاريخ التسجيل", 
+      "الحالة", 
+      "رقم الملف", 
+      "رقم الدرج", 
+      "ملاحظات"
+  ];
+
+  // 2. البيانات (السطر اللي تحت العناوين)
+  const rowData = [
+      cert.brandName,
+      cert.brandNumber,
+      cert.companyName,
+      cert.brandCategory || "غير محددة",
+      cert.productionDate,
+      cert.expiryDate,
+      cert.noticeDate || "لم يتم الاشهار",
+      cert.registrationDate,
+      cert.status,
+      cert.fileNumber,
+      cert.companyNumber,
+      cert.notes || ""
+  ];
+
+  // 3. دمج العناوين مع البيانات في مصفوفة واحدة
+  const finalData = [headers, rowData];
+
+  // 4. إنشاء ورقة العمل (Worksheet)
+  const ws = XLSX.utils.aoa_to_sheet(finalData);
+
+  // 5. تظبيط عرض الأعمدة عشان الكلام ميبقاش مقصوص (تنسيق احترافي)
+  const colWidths = [
+      { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 10 }, 
+      { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, 
+      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 }
+  ];
+  ws['!cols'] = colWidths;
+
+  // 6. إنشاء الكتاب (Workbook) وحفظ الملف
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "بيانات الشهادة");
+  
+  // اسم الملف يكون احترافي
+  const fileName = `تقرير_${cert.brandName.replace(/\s+/g, '_')}.xlsx`;
+  
+  XLSX.writeFile(wb, fileName);
+  
+  showMessage("تم استخراج التقرير بنجاح ✅");
+}
+/* =======================
+    دالة تحميل كل البيانات في ملف إكسيل واحد (الشامل)
+======================= */
+function downloadAllToExcel() {
+    if (certificates.length === 0) {
+        showMessage("⚠️ لا توجد بيانات لتحميلها", false);
+        return;
+    }
+
+    // 1. تعريف العناوين (الصف الأول في الإكسيل)
+    const headers = [
+        "اسم العلامة", 
+        "رقم العلامة", 
+        "اسم الشركة", 
+        "الفئة", 
+        "تاريخ الإنتاج", 
+        "تاريخ الانتهاء", 
+        "تاريخ الإشهار", 
+        "تاريخ التسجيل", 
+        "الحالة", 
+        "رقم الملف", 
+        "رقم الدرج", 
+        "ملاحظات"
+    ];
+
+    // 2. تحويل مصفوفة البيانات لصفوف تناسب الإكسيل
+    const rows = certificates.map(cert => [
+        cert.brandName,
+        cert.brandNumber,
+        cert.companyName,
+        cert.brandCategory || "",
+        cert.productionDate,
+        cert.expiryDate,
+        cert.noticeDate || "",
+        cert.registrationDate,
+        cert.status,
+        cert.fileNumber,
+        cert.companyNumber,
+        cert.notes || ""
+    ]);
+
+    // 3. دمج العناوين مع الصفوف
+    const finalData = [headers, ...rows];
+
+    // 4. إنشاء ورقة العمل والتنسيق
+    const ws = XLSX.utils.aoa_to_sheet(finalData);
+
+    // تظبيط عرض الأعمدة تلقائياً ليناسب البيانات
+    ws['!cols'] = [
+        { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 10 }, 
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, 
+        { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 30 }
+    ];
+
+    // 5. إنشاء الملف وحفظه
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "كل الشهادات");
+    
+    const fileName = `تقرير_شامل_العلامات_${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    
+    showMessage("تم استخراج التقرير الشامل بنجاح ✅");
+}

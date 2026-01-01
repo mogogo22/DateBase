@@ -30,11 +30,21 @@
 </header>
 
 <section class="form-section">
-  <div style="text-align: center; margin-bottom: 20px;">
-    <label class="btn-upload" for="excelInput" style="background: linear-gradient(to top,  #8f00c7, #a8017f); width: 220px;">📂 سحب بيانات من ملف إكسيل</label>
-    <input type="file" id="excelInput" accept=".xlsx, .xls" onchange="importFromExcel(event)">
-    <p style="font-size: 11px; color: #666; margin-top: 5px;">* يجب أن يكون الملف بنفس ترتيب أعمدة النظام</p>
+  <div style="text-align: center; margin-bottom: 20px; display: flex; justify-content: center; gap: 15px; align-items: center; flex-wrap: wrap;">
+    
+    <div>
+      <label class="btn-upload" for="excelInput" style="background-color: #8e44ad; width: 220px; margin: 0;">📂 سحب بيانات من ملف إكسيل</label>
+      <input type="file" id="excelInput" accept=".xlsx, .xls" onchange="importFromExcel(event)" style="display:none;">
+    </div>
+
+    <button id="downloadAllExcel" onclick="downloadAllToExcel()" 
+            style="background-color: #2980b9; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; display: flex; align-items: center; gap: 8px; height: 45px; transition: 0.3s;">
+        📥 تحميل تقرير بيانات
+    </button>
+
   </div>
+  <p style="text-align: center; font-size: 11px; color: #666; margin-top: -10px; margin-bottom: 20px;">* يجب أن يكون الملف بنفس ترتيب أعمدة النظام</p>
+
 
   <div class="form-grid">
     <input type="text" id="brandName" placeholder="اسم العلامة">

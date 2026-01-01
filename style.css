@@ -133,7 +133,15 @@ body{background:#ffffff;color:#f1f1f1;font-family:"Cairo",sans-serif;margin:0;pa
 .btn-upload:hover{background: linear-gradient(to top,  #02005c, #020088);letter-spacing: 1px;}
 input[type="file"]{display:none;}
 .file-name{color:#f1f1f1; font-size:14px; margin-top:5px;}
-
+#downloadAllExcel{
+  display:inline-block; padding:12px 18px; background: linear-gradient(to top,  #020072, #0300a8); color:white; border-radius:8px;
+  cursor:pointer; font-size:14px; text-align:center; transition:.3s; width:220px;
+  align-items: center;
+  text-align: center;
+}
+#downloadAllExcel:hover{background: linear-gradient(to top,  #02005c, #020088);letter-spacing: 1px;}
+input[type="file"]{display:none;}
+.file-name{color:#f1f1f1; font-size:14px; margin-top:5px;}
 /* MESSAGE BOX */
 .message-box {
     position: fixed;
