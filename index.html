@@ -1,114 +1,827 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="logo.png" type="image/png">
-  <title>إدارة الشهادات</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إدارة العلامات التجارية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<audio id="notifySound" src="das.mp3" preload="auto"></audio>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --c-bg:#0a0c10; --c-surface:#111318; --c-surface2:#181c24;
+  --c-border:#1f2430; --c-border2:#2a3040;
+  --c-accent:#c8973a; --c-accent2:#e8b55a;
+  --c-blue:#3b82f6; --c-green:#22c55e; --c-red:#ef4444; --c-orange:#f59e0b;
+  --c-text:#e8eaf0; --c-muted:#8892a4; --c-muted2:#5a6478;
+  --radius:10px; --radius-lg:16px;
+  --shadow:0 4px 24px rgba(0,0,0,.5); --shadow-lg:0 12px 48px rgba(0,0,0,.7);
+  --tr:.22s cubic-bezier(.4,0,.2,1);
+}
+body { font-family:'Cairo','Tajawal',sans-serif; background:var(--c-bg); color:var(--c-text); min-height:100vh; overflow-x:hidden; }
+::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:var(--c-surface)} ::-webkit-scrollbar-thumb{background:var(--c-border2);border-radius:4px} ::-webkit-scrollbar-thumb:hover{background:var(--c-accent)}
+
+/* TOAST */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:linear-gradient(135deg,#1a1f2e,#252c3d);border:1px solid var(--c-border2);color:var(--c-text);padding:12px 28px;border-radius:50px;font-size:14px;font-weight:600;z-index:99999;box-shadow:var(--shadow-lg);transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;max-width:90vw;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast .tbar{position:absolute;bottom:0;left:0;height:3px;width:100%;background:linear-gradient(90deg,var(--c-accent),var(--c-blue));border-radius:0 0 50px 50px;animation:tbarA 4s linear forwards}
+@keyframes tbarA{from{width:100%}to{width:0%}}
+
+/* LOGIN */
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#loginPage::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(200,151,58,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(59,130,246,.06) 0%,transparent 60%)}
+.login-grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--c-border) 1px,transparent 1px),linear-gradient(90deg,var(--c-border) 1px,transparent 1px);background-size:50px 50px;opacity:.3;mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black 40%,transparent 100%)}
+.login-card{position:relative;z-index:2;width:440px;max-width:calc(100vw - 40px);background:var(--c-surface);border:1px solid var(--c-border2);border-radius:24px;padding:44px 40px;box-shadow:var(--shadow-lg),0 0 0 1px rgba(200,151,58,.08);animation:fadeUp .6s cubic-bezier(.4,0,.2,1)}
+/* FIX 4 - لوجوهان في اللوجين */
+.login-logos{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:18px}
+.login-logos img{height:50px;object-fit:contain}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo h1{font-size:19px;font-weight:900;color:var(--c-text)}
+.login-logo p{font-size:12px;color:var(--c-muted);margin-top:4px;font-weight:400}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:11px;font-weight:700;color:var(--c-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.lf input{width:100%;padding:13px 16px;background:var(--c-surface2);border:1.5px solid var(--c-border2);border-radius:var(--radius);color:var(--c-text);font-family:inherit;font-size:14px;transition:var(--tr);text-align:right}
+.lf input:focus{outline:none;border-color:var(--c-accent);background:var(--c-bg);box-shadow:0 0 0 4px rgba(200,151,58,.1)}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--c-accent),#a07828);border:none;border-radius:var(--radius);color:#0a0c10;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;margin-top:8px;box-shadow:0 4px 20px rgba(200,151,58,.25);transition:var(--tr)}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(200,151,58,.4)}
+#loginErr{color:var(--c-red);font-size:13px;text-align:center;margin-top:12px;font-weight:700;min-height:20px}
+
+/* HEADER */
+.app-header{height:64px;background:var(--c-surface);border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+/* FIX 4 - لوجوهان في الهيدر */
+.header-brand{display:flex;align-items:center;gap:14px}
+.header-logos{display:flex;align-items:center;gap:10px}
+.header-logos img{height:34px;object-fit:contain}
+.header-brand-name{font-size:14px;font-weight:900;color:var(--c-text);border-right:1px solid var(--c-border);padding-right:14px}
+.header-search{position:relative;flex:1;max-width:300px;margin:0 20px}
+.header-search input{width:100%;padding:9px 38px 9px 14px;background:var(--c-surface2);border:1.5px solid var(--c-border);border-radius:50px;color:var(--c-text);font-family:inherit;font-size:13px;transition:var(--tr);text-align:right}
+.header-search input:focus{outline:none;border-color:var(--c-accent);background:var(--c-bg)}
+.header-search .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--c-muted);font-size:13px;pointer-events:none}
+.header-actions{display:flex;align-items:center;gap:7px}
+.icon-btn{width:36px;height:36px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:var(--tr);color:var(--c-muted)}
+.icon-btn:hover{border-color:var(--c-border2);background:var(--c-border);color:var(--c-text)}
+.logout-btn{padding:8px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;color:var(--c-red);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:5px}
+.logout-btn:hover{background:rgba(239,68,68,.2);border-color:var(--c-red)}
+
+/* STATS BAR */
+.stats-bar{background:var(--c-surface);border-bottom:1px solid var(--c-border);padding:10px 22px;display:flex;gap:9px;overflow-x:auto;scrollbar-width:none}
+.stats-bar::-webkit-scrollbar{display:none}
+.stat-chip{display:flex;align-items:center;gap:7px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:50px;padding:6px 15px;white-space:nowrap;flex-shrink:0;cursor:pointer;transition:var(--tr)}
+.stat-chip:hover{border-color:var(--c-border2)}
+.stat-chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.snum{font-size:18px;font-weight:900} .slbl{font-size:12px;color:var(--c-muted);font-weight:600}
+
+/* LAYOUT */
+.app-body{display:grid;grid-template-columns:370px 1fr;min-height:calc(100vh - 116px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--c-surface);border-left:1px solid var(--c-border);padding:18px;overflow-y:auto;position:sticky;top:64px;max-height:calc(100vh - 116px)}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-border)}
+.sidebar-header h2{font-size:15px;font-weight:900}
+.sidebar-header span{font-size:11px;color:var(--c-muted);background:var(--c-surface2);padding:3px 9px;border-radius:50px;border:1px solid var(--c-border)}
+
+/* FIX 1+6 - كل المدخلات في عمود واحد مع تسمياتها الصحيحة */
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--c-muted);margin-bottom:5px}
+.required{color:var(--c-red)}
+.form-input{width:100%;padding:10px 12px;background:var(--c-surface2);border:1.5px solid var(--c-border);border-radius:var(--radius);color:var(--c-text);font-family:inherit;font-size:13px;transition:var(--tr);text-align:right;display:block}
+.form-input:focus{outline:none;border-color:var(--c-accent);background:var(--c-bg);box-shadow:0 0 0 3px rgba(200,151,58,.1)}
+.form-input.notes-input{background:linear-gradient(135deg,#1a1e12,#1e2214);border-color:#3a4020;color:#d4e080}
+.form-sec-title{font-size:11px;font-weight:700;color:var(--c-muted2);text-transform:uppercase;letter-spacing:.8px;margin:13px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
+
+/* upload */
+.upload-area{border:1.5px dashed var(--c-border2);border-radius:var(--radius);padding:13px;text-align:center;cursor:pointer;transition:var(--tr);background:var(--c-surface2);display:block;margin-bottom:7px}
+.upload-area:hover{border-color:var(--c-accent);background:rgba(200,151,58,.05)}
+.upload-area input{display:none}
+.u-icon{font-size:20px;margin-bottom:3px}
+.u-lbl{font-size:12px;font-weight:700;color:var(--c-accent);margin-bottom:2px}
+.upload-area p{font-size:11px;color:var(--c-muted)}
+#imagePreview{width:100%;max-height:110px;object-fit:cover;border-radius:8px;margin-bottom:7px;display:none;border:1px solid var(--c-border)}
+#fileNameDisplay{font-size:11px;color:var(--c-green);margin-bottom:5px}
+
+.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,#22c55e,#166534);border:none;border-radius:var(--radius);color:white;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;transition:var(--tr);margin-top:7px;box-shadow:0 4px 16px rgba(34,197,94,.2)}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,197,94,.35)}
+.submit-btn.edit-mode{background:linear-gradient(135deg,var(--c-blue),#1e40af);box-shadow:0 4px 16px rgba(59,130,246,.2)}
+.submit-btn.edit-mode:hover{box-shadow:0 8px 24px rgba(59,130,246,.35)}
+.cancel-edit-btn{width:100%;padding:9px;background:transparent;border:1px solid var(--c-border2);border-radius:var(--radius);color:var(--c-muted);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:var(--tr);margin-top:5px;display:none}
+.cancel-edit-btn:hover{border-color:var(--c-red);color:var(--c-red)}
+.sidebar-actions{margin-top:13px;padding-top:13px;border-top:1px solid var(--c-border);display:flex;flex-direction:column;gap:6px}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border:1px solid var(--c-border);border-radius:var(--radius);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:var(--tr);background:var(--c-surface2);color:var(--c-text)}
+.action-btn:hover{border-color:var(--c-border2);background:var(--c-border)}
+.action-btn.purple{border-color:rgba(139,92,246,.3);color:#a78bfa}.action-btn.purple:hover{background:rgba(139,92,246,.1);border-color:#a78bfa}
+.action-btn.blue{border-color:rgba(59,130,246,.3);color:#60a5fa}.action-btn.blue:hover{background:rgba(59,130,246,.1);border-color:#60a5fa}
+.action-btn.green{border-color:rgba(34,197,94,.3);color:#4ade80}.action-btn.green:hover{background:rgba(34,197,94,.1);border-color:#4ade80}
+.action-btn.red{border-color:rgba(239,68,68,.3);color:#f87171}.action-btn.red:hover{background:rgba(239,68,68,.1);border-color:#f87171}
+
+/* MAIN CONTENT */
+.main-content{padding:20px;overflow-y:auto}
+.content-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.content-toolbar h3{font-size:17px;font-weight:900}
+.content-toolbar p{font-size:12px;color:var(--c-muted);margin-top:2px}
+.view-toggle{display:flex;gap:3px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:3px}
+.view-btn{width:30px;height:30px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:13px;color:var(--c-muted);transition:var(--tr)}
+.view-btn.active{background:var(--c-surface2);color:var(--c-text)}
+
+/* CARDS */
+.certs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.certs-grid.list-view{grid-template-columns:1fr}
+.cert-card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:var(--tr);position:relative;animation:fadeUp .3s ease}
+.cert-card:hover{transform:translateY(-4px);border-color:var(--c-border2);box-shadow:var(--shadow)}
+.cert-badge{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:white;border:1px solid rgba(255,255,255,.1)}
+.cert-img-wrap{width:100%;height:100px;overflow:hidden;background:var(--c-surface2);display:flex;align-items:center;justify-content:center}
+.cert-img-wrap img{width:100%;height:100%;object-fit:cover}
+.cert-img-wrap .no-img{font-size:30px;color:var(--c-border2)}
+.cert-body{padding:10px}
+.cert-name{font-size:13px;font-weight:900;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.cert-company{font-size:11px;color:var(--c-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.cert-meta{display:flex;align-items:center;justify-content:space-between}
+.cert-num{font-size:10px;color:var(--c-muted2)}
+.sp{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:900;padding:3px 8px;border-radius:50px}
+.sp::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.sp.green{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+.sp.orange{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.sp.red{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.certs-grid.list-view .cert-card{display:grid;grid-template-columns:52px 1fr auto;align-items:center;border-radius:10px}
+.certs-grid.list-view .cert-img-wrap{width:52px;height:52px;border-radius:10px 0 0 10px;flex-shrink:0}
+.certs-grid.list-view .cert-badge{display:none}
+.certs-grid.list-view .cert-body{display:flex;align-items:center;padding:10px 14px;gap:12px;flex-wrap:wrap}
+.certs-grid.list-view .cert-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.certs-grid.list-view .cert-company{margin-bottom:0}
+.certs-grid.list-view .cert-meta{flex-direction:column;align-items:flex-end;padding:10px 12px 10px 0}
+.empty-state{grid-column:1/-1;text-align:center;padding:65px 20px;color:var(--c-muted)}
+.empty-state .e-icon{font-size:48px;margin-bottom:13px;opacity:.4}
+.empty-state h3{font-size:16px;font-weight:900;margin-bottom:6px;color:var(--c-text)}
+.empty-state p{font-size:13px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--c-surface);border:1px solid var(--c-border2);border-radius:20px;width:500px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:fadeUp .3s ease}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:17px 21px 13px;border-bottom:1px solid var(--c-border);position:sticky;top:0;background:var(--c-surface);z-index:1}
+.modal-header h3{font-size:16px;font-weight:900}
+.modal-close{width:28px;height:28px;border-radius:50%;background:var(--c-surface2);border:1px solid var(--c-border);color:var(--c-muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+.modal-close:hover{background:var(--c-red);color:white;border-color:var(--c-red)}
+.modal-body{padding:17px 21px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.di{background:var(--c-surface2);border:1px solid var(--c-border);border-radius:8px;padding:8px 11px}
+.di .dl{font-size:10px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:700}
+.di .dv{font-size:13px;font-weight:700;color:var(--c-text)}
+.di.full{grid-column:1/-1}
+.rem-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:50px;font-size:13px;font-weight:700;background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2);margin-bottom:13px}
+.modal-img{width:100%;max-height:175px;object-fit:cover;border-radius:9px;margin-bottom:13px;border:1px solid var(--c-border);cursor:zoom-in}
+.file-att{display:flex;align-items:center;justify-content:space-between;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:8px;padding:8px 12px;margin-bottom:6px}
+.file-att .fn{font-size:12px;color:var(--c-text)}
+.file-att button{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:#60a5fa;font-family:inherit;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;transition:var(--tr)}
+.file-att button:hover{background:rgba(59,130,246,.2)}
+.modal-footer{display:flex;gap:7px;padding:13px 21px 17px;border-top:1px solid var(--c-border);flex-wrap:wrap}
+.modal-footer button{flex:1;min-width:85px;padding:9px;border-radius:var(--radius);font-family:inherit;font-size:12px;font-weight:900;cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:5px}
+.bme{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:#60a5fa}.bme:hover{background:rgba(59,130,246,.2)}
+.bmed{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#fbbf24}.bmed:hover{background:rgba(245,158,11,.2)}
+.bmd{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171}.bmd:hover{background:rgba(239,68,68,.2)}
+.bmc{background:var(--c-surface2);border:1px solid var(--c-border);color:var(--c-muted)}.bmc:hover{border-color:var(--c-border2);color:var(--c-text)}
+
+/* ZOOM */
+#zoomOverlay{position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out}
+#zoomOverlay.open{display:flex}
+#zoomOverlay img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:var(--shadow-lg)}
+
+/* DELETE ALL DIALOG */
+#deleteAllDialog{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999}
+#deleteAllDialog.open{display:flex}
+.del-box{background:var(--c-surface);border:1px solid rgba(239,68,68,.3);border-radius:20px;padding:32px;width:360px;max-width:calc(100vw - 40px);text-align:center;box-shadow:var(--shadow-lg);animation:fadeUp .3s ease}
+.del-box .di2{font-size:42px;margin-bottom:13px}
+.del-box h3{font-size:16px;font-weight:900;margin-bottom:6px;color:var(--c-red)}
+.del-box p{font-size:12px;color:var(--c-muted);margin-bottom:16px}
+.del-box input{width:100%;padding:11px;margin-bottom:13px;background:var(--c-surface2);border:1.5px solid var(--c-border);border-radius:8px;color:var(--c-text);font-family:inherit;font-size:14px;text-align:center}
+.del-box input:focus{outline:none;border-color:var(--c-red)}
+.del-acts{display:flex;gap:8px}
+.del-ok{flex:1;padding:11px;background:var(--c-red);border:none;border-radius:8px;color:white;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;transition:var(--tr)}.del-ok:hover{background:#dc2626}
+.del-cancel{flex:1;padding:11px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:8px;color:var(--c-muted);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:var(--tr)}.del-cancel:hover{border-color:var(--c-border2);color:var(--c-text)}
+
+/* FOOTER */
+.app-footer{background:var(--c-surface);border-top:1px solid var(--c-border);padding:10px 22px;display:flex;align-items:center;justify-content:space-between}
+.app-footer p{font-size:12px;color:var(--c-muted2)}
+.app-footer span{color:var(--c-accent);font-weight:700}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.app-body{grid-template-columns:1fr}.sidebar{position:static;max-height:none;border-left:none;border-bottom:1px solid var(--c-border)}}
+@media(max-width:600px){.app-header{padding:0 12px}.header-search{margin:0 8px}.header-brand-name{display:none}.main-content{padding:12px}.sidebar{padding:12px}.detail-grid{grid-template-columns:1fr}.modal-footer{flex-direction:column}.modal-footer button{flex:unset}}
+</style>
 </head>
 <body>
+<div id="toast"></div>
+<div id="zoomOverlay" onclick="this.classList.remove('open')"><img id="zoomedImg" src="" alt=""></div>
 
-<div id="messageBox" class="message-box"></div>
-
-<header>
-  <div class="header-right">
-    <img src="A.png" alt="logo2">
-    <img src="logo.png" alt="logo">
-  </div>
-  <div class="header-left">
-    <button id="logoutBtn" class="logout-btn">تسجيل خروج</button>
-    <input type="text" id="searchInput" placeholder="🔎 ابحث بإسم العلامة">
-  </div>
-  <div class="mode-toggle">
-    <button id="themeToggle" title="تغيير وضع الإضاءة">
-        <span id="themeIcon">🌙</span>
-    </button>
-  </div>
-</header>
-
-<section class="form-section">
-  <div style="text-align: center; margin-bottom: 20px; display: flex; justify-content: center; gap: 15px; align-items: center; flex-wrap: wrap;">
-    
-    <div>
-      <label class="btn-upload" for="excelInput" style="background-color: #8e44ad; width: 220px; margin: 0;">📂 سحب بيانات من ملف إكسيل</label>
-      <input type="file" id="excelInput" accept=".xlsx, .xls" onchange="importFromExcel(event)" style="display:none;">
+<!-- DELETE ALL DIALOG -->
+<div id="deleteAllDialog">
+  <div class="del-box">
+    <div class="di2">🗑️</div>
+    <h3>حذف جميع البيانات</h3>
+    <p>هذا الإجراء لا يمكن التراجع عنه.<br>أدخل كلمة المرور للتأكيد.</p>
+    <input type="password" id="delAllPass" placeholder="كلمة المرور">
+    <div class="del-acts">
+      <button class="del-ok" onclick="confirmDeleteAll()">حذف نهائي</button>
+      <button class="del-cancel" onclick="document.getElementById('deleteAllDialog').classList.remove('open')">إلغاء</button>
     </div>
-
-    <button id="downloadAllExcel" onclick="downloadAllToExcel()" 
-            style="background-color: #2980b9; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; display: flex; align-items: center; gap: 8px; height: 45px; transition: 0.3s;">
-        📥 تحميل تقرير بيانات
-    </button>
-
-  </div>
-  <p style="text-align: center; font-size: 11px; color: #666; margin-top: -10px; margin-bottom: 20px;">* يجب أن يكون الملف بنفس ترتيب أعمدة النظام</p>
-
-
-  <div class="form-grid">
-    <input type="text" id="brandName" placeholder="اسم العلامة">
-    <input type="text" id="brandNumber" placeholder="رقم العلامة">
-    <input type="text" id="companyName" placeholder="اسم الشركة">
-    <input type="text" id="brandCategory" placeholder="الفئة"> <label>تاريخ الإنتاج</label>
-    <input type="date" id="productionDate">
-    <label>تاريخ الانتهاء</label>
-    <input type="date" id="expiryDate">
-    
-    <label>تاريخ الإشهار (اختياري)</label> <input type="date" id="noticeDate">
-    <label>تاريخ التسجيل</label> <input type="date" id="registrationDate">
-
-    <select id="certificateStatus">
-      <option value="قيد الإجراء">قيد الإجراء</option>
-      <option value="سارية">سارية</option>
-      <option value="منتهية">منتهية</option>
-    </select>
-
-    <input type="text" id="fileNumber" placeholder="رقم الملف">
-    <input type="text" id="companyNumber" placeholder="رقم الدرج">
-
-    <center>
-      <label class="btn-upload" for="certificateImage">إرفع صورة</label>
-      <input type="file" id="certificateImage" accept="image/*">
-      <img id="imagePreview" class="image-preview">
-
-      <label class="btn-upload" for="certificateFile">إرفع PDF / Excel</label>
-      <input type="file" id="certificateFile" accept=".pdf,.xls,.xlsx" multiple> 
-      <div id="fileNameDisplay" class="file-name"></div>
-    </center>
-
-    <input type="text" id="notes" placeholder="ملاحظات (اختياري)">
-
-    <button id="submitBtn">إضافة</button>
-  </div>
-
-  <button id="deleteAllBtn" class="btn-delete-all">حذف الكل</button>
-  <div class="backup-controls">
-    <button id="exportBtn" onclick="exportData()">تصدير نسخة احتياطية (Export)</button>
-    <button id="importBtn" onclick="document.getElementById('fileInputImport').click()">استيراد نسخة احتياطية (Import)</button>
-    <input type="file" id="fileInputImport" style="display:none" accept=".json" onchange="importData(event)">
-  </div>
-</section>
-
-<section class="certificates" id="certificatesContainer"></section>
-
-<div class="modal" id="detailsModal" style="display:none;">
-  <div class="modal-content">
-    <div id="detailsContent" dir="rtl"></div>
-    <button class="btn-delete" id="deleteBtn">حذف</button>
-    <button class="btn-edit" id="editBtn">تعديل</button>
-    <button class="btn-close" id="closeBtn">إغلاق</button>
   </div>
 </div>
 
-
-  <!-- ========== FOOTER ========== -->
-  <footer class="foot" id="foont">
-    <div class="container">
-      <p class="fop">Copyright © 2026 <span class="ssss">Muhamad ELmoatasem Bellh</span></p>
+<!-- ========== LOGIN ========== -->
+<div id="loginPage">
+  <div class="login-grid-bg"></div>
+  <div class="login-card">
+    <!-- FIX 4 -->
+    <div class="login-logos">
+      <img src="A.png"    alt="Amer" onerror="this.style.display='none'">
+      <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
     </div>
+    <div class="login-logo">
+      <h1>إدارة العلامات التجارية</h1>
+      <p>نظام متكامل لإدارة الشهادات والتسجيلات</p>
+    </div>
+    <div class="lf">
+      <label>اسم المستخدم</label>
+      <input type="text" id="loginEmail" placeholder="أدخل اسم المستخدم" autocomplete="off">
+    </div>
+    <div class="lf">
+      <label>كلمة المرور</label>
+      <input type="password" id="loginPass" placeholder="••••••••••••">
+    </div>
+    <button class="login-btn" onclick="doLogin()">دخول إلى النظام ←</button>
+    <div id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="mainApp" style="display:none">
+
+  <header class="app-header">
+    <div class="header-brand">
+      <!-- FIX 4 -->
+      <div class="header-logos">
+        <img src="A.png"    alt="Amer" onerror="this.style.display='none'">
+        <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+      </div>
+      <span class="header-brand-name">إدارة العلامات التجارية</span>
+    </div>
+    <div class="header-search">
+      <span class="si">🔎</span>
+      <input type="text" id="searchInput" placeholder="بحث باسم العلامة...">
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()">🌙</button>
+      <button class="logout-btn" onclick="doLogout()">خروج ↩</button>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat-chip" onclick="filterByStatus('')"><div class="dot" style="background:#8892a4"></div><span class="snum" id="statAll">0</span><span class="slbl">الكل</span></div>
+    <div class="stat-chip" onclick="filterByStatus('سارية')"><div class="dot" style="background:#22c55e"></div><span class="snum" id="statActive">0</span><span class="slbl">سارية</span></div>
+    <div class="stat-chip" onclick="filterByStatus('قيد الإجراء')"><div class="dot" style="background:#f59e0b"></div><span class="snum" id="statPending">0</span><span class="slbl">قيد الإجراء</span></div>
+    <div class="stat-chip" onclick="filterByStatus('منتهية')"><div class="dot" style="background:#ef4444"></div><span class="snum" id="statExpired">0</span><span class="slbl">منتهية</span></div>
+    <div class="stat-chip" style="border-color:rgba(239,68,68,.3)" onclick="filterExpiringSoon()"><div class="dot" style="background:#f87171"></div><span class="snum" id="statSoon">0</span><span class="slbl">تنتهي قريباً (7 أيام)</span></div>
+  </div>
+
+  <div class="app-body">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 id="formTitle">إضافة علامة</h2>
+        <span id="formBadge">جديد</span>
+      </div>
+
+      <div class="form-sec-title">🏷️ البيانات الأساسية</div>
+      <!-- FIX 1+6: كل مدخل في سطر منفصل مع الاسم الصحيح -->
+      <div class="form-group">
+        <label>اسم العلامة <span class="required">*</span></label>
+        <input class="form-input" id="f_brandName" placeholder="اسم العلامة التجارية">
+      </div>
+      <div class="form-group">
+        <label>رقم العلامة <span class="required">*</span></label>
+        <input class="form-input" id="f_brandNumber" placeholder="رقم العلامة (أرقام فقط)">
+      </div>
+      <div class="form-group">
+        <label>اسم الشركة <span class="required">*</span></label>
+        <input class="form-input" id="f_companyName" placeholder="اسم الشركة">
+      </div>
+      <div class="form-group">
+        <label>الفئة</label>
+        <input class="form-input" id="f_brandCategory" placeholder="رقم الفئة">
+      </div>
+
+      <div class="form-sec-title">📅 التواريخ</div>
+      <div class="form-group">
+        <label>تاريخ التقديم (الإنتاج) <span class="required">*</span></label>
+        <input class="form-input" type="date" id="f_productionDate">
+      </div>
+      <div class="form-group">
+        <label>تاريخ نهاية التسجيل (الانتهاء) <span class="required">*</span></label>
+        <input class="form-input" type="date" id="f_expiryDate">
+      </div>
+      <div class="form-group">
+        <label>تاريخ الإشهار (الاختياري)</label>
+        <input class="form-input" type="date" id="f_noticeDate">
+      </div>
+      <div class="form-group">
+        <label>تاريخ التسجيل <span class="required">*</span></label>
+        <input class="form-input" type="date" id="f_registrationDate">
+      </div>
+
+      <div class="form-sec-title">📁 الحالة والأرقام</div>
+      <div class="form-group">
+        <label>حالة الإجراء</label>
+        <select class="form-input" id="f_status">
+          <option value="قيد الإجراء">قيد الإجراء</option>
+          <option value="سارية">سارية</option>
+          <option value="منتهية">منتهية</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>رقم الملف</label>
+        <input class="form-input" id="f_fileNumber" placeholder="رقم الملف">
+      </div>
+      <div class="form-group">
+        <label>رقم الدرج</label>
+        <input class="form-input" id="f_companyNumber" placeholder="رقم الدرج">
+      </div>
+
+      <div class="form-sec-title">📎 الملفات والصور</div>
+      <label class="upload-area" for="certImage">
+        <input type="file" id="certImage" accept="image/*">
+        <div class="u-icon">🖼️</div>
+        <div class="u-lbl">رفع صورة العلامة</div>
+        <p>اضغط لاختيار صورة</p>
+      </label>
+      <img id="imagePreview" alt="preview">
+      <label class="upload-area" for="certFile">
+        <input type="file" id="certFile" accept=".pdf,.xls,.xlsx" multiple>
+        <div class="u-icon">📄</div>
+        <div class="u-lbl">رفع ملفات (PDF / Excel)</div>
+        <p>يمكن اختيار أكثر من ملف</p>
+      </label>
+      <div id="fileNameDisplay"></div>
+
+      <div class="form-sec-title">📝 ملاحظات</div>
+      <div class="form-group">
+        <label>ملاحظات (اختياري)</label>
+        <input class="form-input notes-input" id="f_notes" placeholder="أي ملاحظات إضافية...">
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="saveCert()">إضافة العلامة ✓</button>
+      <button class="cancel-edit-btn" id="cancelEditBtn" onclick="cancelEdit()">✕ إلغاء التعديل</button>
+
+      <div class="sidebar-actions">
+        <label class="action-btn purple" for="excelInput" style="cursor:pointer">
+          📂 استيراد من إكسيل
+          <input type="file" id="excelInput" accept=".xlsx,.xls" onchange="importFromExcel(event)" style="display:none">
+        </label>
+        <button class="action-btn blue"  onclick="downloadAllToExcel()">📥 تحميل تقرير شامل</button>
+        <button class="action-btn green" onclick="exportData()">💾 نسخة احتياطية</button>
+        <label class="action-btn green" for="importBackup" style="cursor:pointer">
+          📂 استيراد نسخة احتياطية
+          <input type="file" id="importBackup" accept=".json" onchange="importData(event)" style="display:none">
+        </label>
+        <button class="action-btn red" onclick="openDeleteAll()">🗑️ حذف الكل</button>
+      </div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main-content">
+      <div class="content-toolbar">
+        <div>
+          <h3 id="listTitle">العلامات المسجلة</h3>
+          <p id="listSub">لا توجد سجلات</p>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="شبكة">⊞</button>
+          <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="قائمة">☰</button>
+        </div>
+      </div>
+      <div class="certs-grid" id="certsGrid"></div>
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    <p>Copyright © 2026 <span>Muhamad ELmoatasem Bellh</span></p>
+    <p id="footerCount" style="font-size:12px;color:#5a6478"></p>
   </footer>
-  
-<script src="main.js"></script>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalTitle">تفاصيل العلامة</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="bme"  onclick="exportCurrentCert()">📥 Excel</button>
+      <button class="bmed" onclick="editCurrentCert()">✏️ تعديل</button>
+      <button class="bmd"  onclick="deleteCurrentCert()">🗑️ حذف</button>
+      <button class="bmc"  onclick="closeModal()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LOGIN_EMAIL = "amer";
+const LOGIN_PASS  = "amer@689090";
+
+/* FIX 3 - الصوت */
+const snd = document.getElementById("notifySound");
+function playSound() {
+  try {
+    snd.currentTime = 0;
+    const p = snd.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch(e) {}
+}
+
+let certs        = JSON.parse(localStorage.getItem("certs_v3") || "[]");
+let editIndex    = null;
+let curModal     = null;
+let curView      = 'grid';
+let activeFilter = '';
+
+function saveDB() { localStorage.setItem("certs_v3", JSON.stringify(certs)); }
+
+/* TOAST */
+let tTimer;
+function showToast(msg, sound=false) {
+  const t = document.getElementById("toast");
+  t.innerHTML = `<span>${msg}</span><div class="tbar"></div>`;
+  t.classList.add("show");
+  if(sound) playSound();
+  clearTimeout(tTimer);
+  tTimer = setTimeout(()=>t.classList.remove("show"), 4500);
+}
+
+/* AUTH */
+function doLogin() {
+  const e   = document.getElementById("loginEmail").value.trim();
+  const p   = document.getElementById("loginPass").value.trim();
+  const err = document.getElementById("loginErr");
+  if(e===LOGIN_EMAIL && p===LOGIN_PASS) {
+    sessionStorage.setItem("auth","yes");
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainApp").style.display   = "block";
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPass").value  = "";
+    init();
+  } else {
+    playSound();
+    err.textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
+    document.getElementById("loginPass").value = "";
+    setTimeout(()=>err.textContent="", 3000);
+  }
+}
+function doLogout() {
+  sessionStorage.removeItem("auth");
+  document.getElementById("mainApp").style.display   = "none";
+  document.getElementById("loginPage").style.display = "flex";
+}
+["loginEmail","loginPass"].forEach(id=>
+  document.getElementById(id).addEventListener("keyup",e=>{if(e.key==="Enter")doLogin()})
+);
+
+window.addEventListener("load", ()=>{
+  applyTheme(localStorage.getItem("theme")||"dark");
+  if(sessionStorage.getItem("auth")==="yes"){
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainApp").style.display   = "block";
+    init();
+  }
+});
+
+function init() {
+  renderAll(); checkExpiry(); setupNumericInputs();
+  document.getElementById("searchInput").oninput = function(){ renderAll(this.value.trim()); };
+  document.getElementById("certImage").onchange  = handleImageChange;
+  document.getElementById("certFile").onchange   = handleFileChange;
+}
+
+/* HELPERS */
+function getRemainingTime(s) {
+  if(!s) return "غير محدد";
+  const from=new Date(), to=new Date(s);
+  if(to<from) return "منتهية بالفعل";
+  let y=to.getFullYear()-from.getFullYear(), m=to.getMonth()-from.getMonth(), d=to.getDate()-from.getDate();
+  if(d<0){m--;d+=new Date(to.getFullYear(),to.getMonth(),0).getDate()}
+  if(m<0){y--;m+=12}
+  const p=[];
+  if(y>0)p.push(`${y} سنة`);
+  if(m>0)p.push(`${m} شهر`);
+  if(d>0)p.push(`${d} يوم`);
+  return p.length ? p.join(" و ") : "تنتهي اليوم";
+}
+function arDate(s){ if(!s)return"—"; return new Date(s).toLocaleDateString("ar-EG",{day:"numeric",month:"long",year:"numeric"}); }
+function spill(status){ const m={"سارية":"green","قيد الإجراء":"orange","منتهية":"red"}; return `<span class="sp ${m[status]||'orange'}">${status}</span>`; }
+function daysLeft(s){ if(!s)return Infinity; return Math.ceil((new Date(s)-new Date())/86400000); }
+
+function setupNumericInputs(){
+  ["f_brandNumber","f_companyNumber","f_fileNumber","f_brandCategory"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.oninput=function(){this.value=this.value.replace(/[^0-9]/g,'')};
+  });
+}
+
+function handleImageChange(){
+  const f=document.getElementById("certImage").files[0];
+  const p=document.getElementById("imagePreview");
+  if(f&&f.type.startsWith("image")){
+    const r=new FileReader(); r.onload=()=>{p.src=r.result;p.style.display="block"}; r.readAsDataURL(f);
+  } else p.style.display="none";
+}
+function handleFileChange(){
+  const files=document.getElementById("certFile").files;
+  const d=document.getElementById("fileNameDisplay"); d.innerHTML="";
+  Array.from(files).forEach(f=>{
+    const div=document.createElement("div");
+    div.textContent=`📄 ${f.name}`; div.style.cssText="font-size:11px;color:#4ade80;margin-top:3px";
+    d.appendChild(div);
+  });
+}
+
+function filterByStatus(s){ activeFilter=s; renderAll(document.getElementById("searchInput").value.trim()); }
+function filterExpiringSoon(){ activeFilter='__soon__'; renderAll(document.getElementById("searchInput").value.trim()); }
+
+/* RENDER */
+function renderAll(search="") {
+  const grid=document.getElementById("certsGrid");
+  grid.className="certs-grid"+(curView==="list"?" list-view":"");
+  let list=[...certs];
+  if(activeFilter==='__soon__') list=list.filter(c=>{const d=daysLeft(c.expiryDate);return d>=0&&d<=7});
+  else if(activeFilter) list=list.filter(c=>c.status===activeFilter);
+  if(search) list=list.filter(c=>c.brandName.includes(search)||c.companyName.includes(search));
+
+  document.getElementById("statAll").textContent    = certs.length;
+  document.getElementById("statActive").textContent  = certs.filter(c=>c.status==="سارية").length;
+  document.getElementById("statPending").textContent = certs.filter(c=>c.status==="قيد الإجراء").length;
+  document.getElementById("statExpired").textContent = certs.filter(c=>c.status==="منتهية").length;
+  document.getElementById("statSoon").textContent    = certs.filter(c=>{const d=daysLeft(c.expiryDate);return d>=0&&d<=7}).length;
+  document.getElementById("footerCount").textContent = `إجمالي السجلات: ${certs.length}`;
+  document.getElementById("listTitle").textContent   = activeFilter==='__soon__'?"تنتهي قريباً":activeFilter?`الحالة: ${activeFilter}`:"العلامات المسجلة";
+  document.getElementById("listSub").textContent     = `${list.length} سجل${search?" — نتائج البحث":""}`;
+
+  grid.innerHTML="";
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><div class="e-icon">📭</div><h3>لا توجد سجلات</h3><p>${search?"لم يتم العثور على نتائج":"ابدأ بإضافة علامتك الأولى من القائمة الجانبية"}</p></div>`;
+    return;
+  }
+  list.forEach(cert=>{
+    const realIdx=certs.indexOf(cert);
+    const card=document.createElement("div"); card.className="cert-card";
+    const dl=daysLeft(cert.expiryDate);
+    if(dl<=7&&dl>=0) card.style.borderColor="rgba(239,68,68,.5)";
+    card.onclick=()=>openModal(cert,realIdx);
+    if(curView==="list"){
+      card.innerHTML=`
+        <div class="cert-img-wrap">${cert.image?`<img src="${cert.image}" alt="">`:'<div class="no-img">⚖️</div>'}</div>
+        <div class="cert-body">
+          <div><div class="cert-name">${cert.brandName}</div><div class="cert-company">${cert.companyName}</div></div>
+          <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">${spill(cert.status)}<span style="font-size:11px;color:var(--c-muted)">📅 ${arDate(cert.expiryDate)}</span></div>
+        </div>
+        <div class="cert-meta">${spill(cert.status)}<span class="cert-num" style="margin-top:4px">#${cert.brandNumber||'—'}</span></div>`;
+    } else {
+      card.innerHTML=`
+        <div class="cert-badge">${realIdx+1}</div>
+        <div class="cert-img-wrap">${cert.image?`<img src="${cert.image}" alt="">`:'<div class="no-img">⚖️</div>'}</div>
+        <div class="cert-body">
+          <div class="cert-name">${cert.brandName}</div>
+          <div class="cert-company">${cert.companyName}</div>
+          <div class="cert-meta">${spill(cert.status)}<span class="cert-num">#${cert.brandNumber||'—'}</span></div>
+        </div>`;
+    }
+    grid.appendChild(card);
+  });
+}
+
+function setView(v){
+  curView=v;
+  document.getElementById("gridViewBtn").classList.toggle("active",v==="grid");
+  document.getElementById("listViewBtn").classList.toggle("active",v==="list");
+  renderAll(document.getElementById("searchInput").value.trim());
+}
+
+/* FIX 2 - حفظ السجل يشتغل صح */
+function saveCert() {
+  const brandName        = document.getElementById("f_brandName").value.trim();
+  const brandNumber      = document.getElementById("f_brandNumber").value.trim();
+  const companyName      = document.getElementById("f_companyName").value.trim();
+  const productionDate   = document.getElementById("f_productionDate").value;
+  const expiryDate       = document.getElementById("f_expiryDate").value;
+  const registrationDate = document.getElementById("f_registrationDate").value;
+
+  if(!brandName||!brandNumber||!companyName||!productionDate||!expiryDate||!registrationDate){
+    showToast("⚠️ يرجى ملء الحقول الإلزامية (*)", true); return;
+  }
+  if(!isNaN(brandName)&&brandName!==""){
+    showToast("❌ اسم العلامة لا يمكن أن يكون أرقاماً فقط", true); return;
+  }
+
+  const imgInput  = document.getElementById("certImage");
+  const fileInput = document.getElementById("certFile");
+  const old       = editIndex!==null ? certs[editIndex] : {};
+  const rb64      = f=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f)});
+
+  (async()=>{
+    let imgData    = old.image||"";
+    if(imgInput.files[0]) imgData=await rb64(imgInput.files[0]);
+    let finalFiles = old.files||[];
+    if(fileInput.files.length>0)
+      finalFiles=await Promise.all(Array.from(fileInput.files).map(async f=>({name:f.name,data:await rb64(f)})));
+
+    const cert={
+      brandName, brandNumber, companyName,
+      brandCategory:    document.getElementById("f_brandCategory").value.trim(),
+      productionDate, expiryDate,
+      noticeDate:       document.getElementById("f_noticeDate").value,
+      registrationDate,
+      status:           document.getElementById("f_status").value,
+      fileNumber:       document.getElementById("f_fileNumber").value.trim(),
+      companyNumber:    document.getElementById("f_companyNumber").value.trim(),
+      notes:            document.getElementById("f_notes").value.trim(),
+      image:imgData, files:finalFiles
+    };
+
+    if(editIndex!==null){ certs[editIndex]=cert; showToast("✅ تم تحديث البيانات بنجاح",true); }
+    else { certs.push(cert); showToast("✅ تمت إضافة العلامة بنجاح",true); }
+    saveDB(); clearForm(); renderAll();
+  })();
+}
+
+function clearForm(){
+  ["f_brandName","f_brandNumber","f_companyName","f_brandCategory",
+   "f_productionDate","f_expiryDate","f_noticeDate","f_registrationDate",
+   "f_fileNumber","f_companyNumber","f_notes"].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.value="";
+  });
+  document.getElementById("f_status").value="قيد الإجراء";
+  document.getElementById("imagePreview").style.display="none";
+  document.getElementById("certImage").value="";
+  document.getElementById("certFile").value="";
+  document.getElementById("fileNameDisplay").innerHTML="";
+  editIndex=null;
+  const sb=document.getElementById("submitBtn");
+  sb.textContent="إضافة العلامة ✓"; sb.classList.remove("edit-mode");
+  document.getElementById("cancelEditBtn").style.display="none";
+  document.getElementById("formTitle").textContent="إضافة علامة";
+  document.getElementById("formBadge").textContent="جديد";
+}
+function cancelEdit(){ clearForm(); showToast("تم إلغاء التعديل"); }
+
+/* MODAL */
+function openModal(cert,idx){
+  curModal={cert,idx};
+  document.getElementById("modalTitle").textContent=cert.brandName;
+  const dl=daysLeft(cert.expiryDate);
+  const urgStyle=dl<=7&&dl>=0?"background:rgba(239,68,68,.1);color:#f87171;border-color:rgba(239,68,68,.3)":"";
+  const fList=cert.files&&cert.files.length>0
+    ?cert.files.map(f=>`<div class="file-att"><span class="fn">📄 ${f.name}</span><button onclick="const w=window.open();w.document.write('<iframe src=\\'${f.data}\\' frameborder=\\'0\\' style=\\'width:100%;height:100%;border:0;\\'></iframe>')">عرض</button></div>`).join("")
+    :`<p style="color:var(--c-muted);font-size:12px">لا توجد ملفات مرفقة</p>`;
+  document.getElementById("modalBody").innerHTML=`
+    ${cert.image?`<img src="${cert.image}" class="modal-img" onclick="zoomImage('${cert.image}')">`:""}
+    <div class="rem-badge" style="${urgStyle}">⏳ المتبقي: ${getRemainingTime(cert.expiryDate)}</div>
+    <div class="detail-grid">
+      <div class="di"><div class="dl">اسم العلامة</div><div class="dv">🏷️ ${cert.brandName}</div></div>
+      <div class="di"><div class="dl">رقم العلامة</div><div class="dv">#${cert.brandNumber||'—'}</div></div>
+      <div class="di"><div class="dl">اسم الشركة</div><div class="dv">🏢 ${cert.companyName}</div></div>
+      <div class="di"><div class="dl">الفئة</div><div class="dv">${cert.brandCategory||'—'}</div></div>
+      <div class="di"><div class="dl">تاريخ التقديم</div><div class="dv">${arDate(cert.productionDate)}</div></div>
+      <div class="di"><div class="dl">تاريخ الانتهاء</div><div class="dv" style="${dl<=30?'color:var(--c-red)':''}">${arDate(cert.expiryDate)}</div></div>
+      <div class="di"><div class="dl">تاريخ الإشهار</div><div class="dv">${arDate(cert.noticeDate)}</div></div>
+      <div class="di"><div class="dl">تاريخ التسجيل</div><div class="dv">${arDate(cert.registrationDate)}</div></div>
+      <div class="di"><div class="dl">الحالة</div><div class="dv">${spill(cert.status)}</div></div>
+      <div class="di"><div class="dl">ملف / درج</div><div class="dv">${cert.fileNumber||'—'} / ${cert.companyNumber||'—'}</div></div>
+      ${cert.notes?`<div class="di full"><div class="dl">ملاحظات</div><div class="dv">${cert.notes}</div></div>`:""}
+    </div>
+    <div class="form-sec-title" style="margin-bottom:9px">📎 الملفات المرفقة</div>${fList}`;
+  document.getElementById("detailsModal").classList.add("open");
+}
+function closeModal(){ document.getElementById("detailsModal").classList.remove("open"); }
+function editCurrentCert(){
+  if(!curModal)return;
+  const{cert,idx}=curModal; closeModal();
+  document.getElementById("f_brandName").value        = cert.brandName;
+  document.getElementById("f_brandNumber").value      = cert.brandNumber;
+  document.getElementById("f_companyName").value      = cert.companyName;
+  document.getElementById("f_brandCategory").value    = cert.brandCategory||"";
+  document.getElementById("f_productionDate").value   = cert.productionDate||"";
+  document.getElementById("f_expiryDate").value       = cert.expiryDate||"";
+  document.getElementById("f_noticeDate").value       = cert.noticeDate||"";
+  document.getElementById("f_registrationDate").value = cert.registrationDate||"";
+  document.getElementById("f_status").value           = cert.status;
+  document.getElementById("f_fileNumber").value       = cert.fileNumber||"";
+  document.getElementById("f_companyNumber").value    = cert.companyNumber||"";
+  document.getElementById("f_notes").value            = cert.notes||"";
+  if(cert.image){const p=document.getElementById("imagePreview");p.src=cert.image;p.style.display="block"}
+  editIndex=idx;
+  const sb=document.getElementById("submitBtn");
+  sb.textContent="💾 حفظ التعديلات"; sb.classList.add("edit-mode");
+  document.getElementById("cancelEditBtn").style.display="block";
+  document.getElementById("formTitle").textContent="تعديل علامة";
+  document.getElementById("formBadge").textContent="تعديل";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function deleteCurrentCert(){
+  if(!curModal)return;
+  if(!confirm(`هل تريد حذف "${curModal.cert.brandName}" نهائياً؟`))return;
+  certs.splice(curModal.idx,1); saveDB(); renderAll(); closeModal();
+  showToast("🗑️ تم حذف السجل");
+}
+function exportCurrentCert(){ if(curModal) downloadCertExcel(curModal.cert); }
+
+/* FIX 5 - حذف الكل: كلمة سر غلط = تسجيل خروج */
+function openDeleteAll(){ document.getElementById("delAllPass").value=""; document.getElementById("deleteAllDialog").classList.add("open"); }
+function confirmDeleteAll(){
+  const pass=document.getElementById("delAllPass").value;
+  document.getElementById("deleteAllDialog").classList.remove("open");
+  if(pass===LOGIN_PASS){
+    certs=[]; saveDB(); renderAll();
+    showToast("🗑️ تم مسح جميع البيانات");
+  } else {
+    doLogout(); // FIX 5
+  }
+}
+
+function zoomImage(src){ document.getElementById("zoomedImg").src=src; document.getElementById("zoomOverlay").classList.add("open"); }
+
+function checkExpiry(){
+  const names=certs.filter(c=>{const d=daysLeft(c.expiryDate);return d>=0&&d<=7}).map(c=>c.brandName);
+  if(names.length>0) showToast(`⚠️ تنتهي قريباً: ${names.join(" ، ")}`,true);
+}
+
+/* EXCEL IMPORT */
+function importFromExcel(event){
+  const file=event.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+    let count=0;
+    rows.forEach((row,i)=>{
+      if(i===0||(!row[0]&&!row[1]))return;
+      certs.push({brandName:String(row[0]||"").trim(),brandNumber:String(row[1]||"").trim(),companyName:String(row[2]||"").trim(),brandCategory:String(row[3]||"").trim(),productionDate:fmtXLDate(row[4]),expiryDate:fmtXLDate(row[5]),noticeDate:fmtXLDate(row[6]),registrationDate:fmtXLDate(row[7]),status:String(row[8]||"قيد الإجراء").trim(),fileNumber:String(row[9]||"").trim(),companyNumber:String(row[10]||"").trim(),notes:"مستورد من إكسيل",image:"",files:[]});
+      count++;
+    });
+    saveDB(); renderAll();
+    showToast(`✅ تمت إضافة ${count} سجل من الإكسيل`,true);
+    event.target.value="";
+  };
+  reader.readAsArrayBuffer(file);
+}
+function fmtXLDate(v){ if(!v)return""; if(!isNaN(v))return new Date((v-25569)*86400000).toISOString().split("T")[0]; return v; }
+
+/* EXCEL EXPORT */
+function downloadCertExcel(cert){
+  const h=["اسم العلامة","رقم العلامة","اسم الشركة","الفئة","تاريخ الإنتاج","تاريخ الانتهاء","تاريخ الإشهار","تاريخ التسجيل","الحالة","رقم الملف","رقم الدرج","ملاحظات"];
+  const r=[cert.brandName,cert.brandNumber,cert.companyName,cert.brandCategory||"",cert.productionDate,cert.expiryDate,cert.noticeDate||"",cert.registrationDate,cert.status,cert.fileNumber,cert.companyNumber,cert.notes||""];
+  const ws=XLSX.utils.aoa_to_sheet([h,r]); ws["!cols"]=h.map((_,i)=>({wch:[25,15,25,10,18,18,18,18,12,12,12,30][i]}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"بيانات");
+  XLSX.writeFile(wb,`تقرير_${cert.brandName.replace(/\s+/g,"_")}.xlsx`);
+  showToast("📥 تم استخراج تقرير الشهادة");
+}
+function downloadAllToExcel(){
+  if(!certs.length){showToast("⚠️ لا توجد بيانات");return}
+  const h=["اسم العلامة","رقم العلامة","اسم الشركة","الفئة","تاريخ الإنتاج","تاريخ الانتهاء","تاريخ الإشهار","تاريخ التسجيل","الحالة","رقم الملف","رقم الدرج","ملاحظات"];
+  const rows=certs.map(c=>[c.brandName,c.brandNumber,c.companyName,c.brandCategory||"",c.productionDate,c.expiryDate,c.noticeDate||"",c.registrationDate,c.status,c.fileNumber,c.companyNumber,c.notes||""]);
+  const ws=XLSX.utils.aoa_to_sheet([h,...rows]); ws["!cols"]=h.map((_,i)=>({wch:[25,15,25,10,15,15,15,15,12,12,12,30][i]}));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"كل العلامات");
+  XLSX.writeFile(wb,`تقرير_شامل_${new Date().toLocaleDateString("ar-EG").replace(/\//g,"-")}.xlsx`);
+  showToast("📥 تم استخراج التقرير الشامل");
+}
+
+/* BACKUP */
+function exportData(){ const blob=new Blob([localStorage.getItem("certs_v3")||"[]"],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); showToast("💾 تم تصدير النسخة الاحتياطية"); }
+function importData(event){ const f=event.target.files[0];if(!f)return; const r=new FileReader(); r.onload=e=>{localStorage.setItem("certs_v3",e.target.result);location.reload()}; r.readAsText(f); }
+
+/* THEME */
+function applyTheme(theme){
+  const btn=document.getElementById("themeToggleBtn");
+  if(theme==="light"){
+    document.documentElement.style.setProperty("--c-bg","#f0f2f5");
+    document.documentElement.style.setProperty("--c-surface","#ffffff");
+    document.documentElement.style.setProperty("--c-surface2","#f4f5f8");
+    document.documentElement.style.setProperty("--c-border","#e2e4ea");
+    document.documentElement.style.setProperty("--c-border2","#cacdd8");
+    document.documentElement.style.setProperty("--c-text","#1a1d28");
+    document.documentElement.style.setProperty("--c-muted","#6b7280");
+    document.documentElement.style.setProperty("--c-muted2","#9ca3af");
+    if(btn)btn.textContent="☀️";
+  } else {
+    ["--c-bg","--c-surface","--c-surface2","--c-border","--c-border2","--c-text","--c-muted","--c-muted2"]
+      .forEach(v=>document.documentElement.style.removeProperty(v));
+    if(btn)btn.textContent="🌙";
+  }
+  localStorage.setItem("theme",theme);
+}
+function toggleTheme(){ const cur=localStorage.getItem("theme")||"dark"; applyTheme(cur==="dark"?"light":"dark"); showToast(cur==="dark"?"☀️ الوضع النهاري":"🌙 الوضع الليلي"); }
+
+document.getElementById("detailsModal").addEventListener("click",function(e){if(e.target===this)closeModal()});
+</script>
 </body>
 </html>
